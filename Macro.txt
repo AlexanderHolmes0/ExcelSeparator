@@ -1,0 +1,240 @@
+Sub Tryit23()
+Application.ScreenUpdating = False
+
+colExample = WorksheetFunction.Match("Report_Run_Date", Rows("1:1"), 0)
+attr = WorksheetFunction.Match("Attribute", Rows("1:1"), 0)
+dateletter = Split(Cells(1, colExample).Address, "$")(1)
+
+hold = False
+a = ActiveSheet.Range(dateletter & "2").Value
+
+a = CStr(a)
+
+If Application.OperatingSystem Like "*Mac*" Then
+x = Right(a, 2)
+x = "20" & x
+x = CInt(x)
+Else
+x = Right(a, 4)
+x = CInt(x) 'year
+End If
+
+
+y = Left(a, (Application.WorksheetFunction.Find("/", a, 1) - 1)) 'month
+Z = Replace(a, "/", "") 'no slash
+b = Month(a) & Day(a) 'for filepath
+
+y = CInt(y)
+
+Dim folder As String
+ 
+folder = Application.ActiveWorkbook.Path 'does not include the wb name yay!
+
+
+'MsgBox Environ("OneDrive")
+folder = fRelocateOneDrivePath(folder) 'change the complicated mess
+
+'MsgBox Application.ActiveWorkbook.Path
+'mk directories
+If (InStr(Application.ActiveWorkbook.Name, "outstanding") <> 0 And Application.OperatingSystem Like "*Mac*") Then
+Balances = folder & "/OutstandingBalances" & b
+MkDir Balances
+sem = WorksheetFunction.Match("Academic_Period", Rows("1:1"), 0)
+
+ElseIf (InStr(Application.ActiveWorkbook.Name, "(holds)") <> 0 And Application.OperatingSystem Like "*Mac*") Then
+Holds = folder & "/Holds" & b
+MkDir Holds
+hold = True
+sem = WorksheetFunction.Match("From_Date", Rows("1:1"), 0)
+
+ElseIf (InStr(Application.ActiveWorkbook.Name, "outstanding") <> 0) Then
+Balances = folder & "\OutstandingBalances" & b
+MkDir Balances
+sem = WorksheetFunction.Match("Academic_Period", Rows("1:1"), 0)
+
+ElseIf (InStr(Application.ActiveWorkbook.Name, "(holds)") <> 0) Then
+Holds = folder & "\Holds" & b
+MkDir Holds
+
+hold = True
+sem = WorksheetFunction.Match("From_Date", Rows("1:1"), 0)
+End If
+
+
+Dim arr() As String
+arr = Split("ADMBA,EMBA GSC,EMBA HL,EMBA SL,PROMBA,PEMBA", ",")
+
+
+
+ActiveSheet.Range("A1").Select
+
+For I = 0 To 5
+
+If (arr(I) = "ADMBA") Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=attr, Criteria1:="EASD"
+    If hold = False Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:="=*" & x & "*"
+    Else
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:= _
+        ">=1/1/" & x, Operator:=xlAnd, Criteria2:="<=12/31/" & x
+    End If
+ElseIf (arr(I) = "EMBA GSC") Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=attr, Criteria1:="EGSC"
+    If hold = False Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:="=*" & x & "*"
+    Else
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:= _
+        ">=1/1/" & x, Operator:=xlAnd, Criteria2:="<=12/31/" & x
+    End If
+ElseIf (arr(I) = "EMBA HL") Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=attr, Criteria1:="EHEM"
+    If hold = False Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:="=*" & x & "*"
+    Else
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:= _
+        ">=1/1/" & x, Operator:=xlAnd, Criteria2:="<=12/31/" & x
+    End If
+ElseIf (arr(I) = "EMBA SL") Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=attr, Criteria1:="EMSL"
+    If hold = False Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:="=*" & x & "*"
+    Else
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:= _
+        ">=1/1/" & x, Operator:=xlAnd, Criteria2:="<=12/31/" & x
+    End If
+
+ElseIf (arr(I) = "PROMBA") Then
+
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=attr, Criteria1:=Array( _
+         "EP22", "EP23", "EMBA"), Operator:=xlFilterValues
+   If hold = False Then
+   If (y >= 1 And y <= 6) Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:= _
+        "=Spring Sem " & x, Operator:=xlOr, Criteria2:="=*" & (x - 1) & "*"
+    ElseIf (y <= 12 And y >= 7) Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:= _
+        "=Fall Sem " & (x - 1), Operator:=xlOr, Criteria2:="=*" & x & "*"
+    End If
+    
+    Else
+    If (y >= 1 And y <= 6) Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:= _
+        ">=1/1/" & x - 1, Operator:=xlAnd, Criteria2:="<=6/30/" & x 'greater than the 1st of last year and less than june 30th of report date
+    ElseIf (y <= 12 And y >= 7) Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=sem, Criteria1:= _
+        ">=7/1/" & x - 1, Operator:=xlAnd, Criteria2:="<=12/31/" & x 'less than current semester and greater than july 1st of last year (fall sem)
+    End If
+    
+    End If
+    
+
+ElseIf (arr(I) = "PEMBA") Then
+    ActiveSheet.Range(Selection, Selection.End(xlToRight)).AutoFilter Field:=attr, Criteria1:="EPHY"
+End If
+
+    Range("A1").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range(Selection, Selection.End(xlToRight)).Select
+    Selection.Copy
+    Sheets.Add After:=ActiveSheet
+    ActiveSheet.Paste
+    ActiveSheet.Name = arr(I)
+    Application.CutCopyMode = False
+    
+    
+Filename = ActiveSheet.Name
+
+
+'Puts the worksheet into its own workbook
+
+If (Not IsEmpty(ActiveSheet.Range("A2"))) Then
+ActiveSheet.Move
+
+'Saves the workbook - uses the name of the worksheet as the name of the new workbook
+
+
+If hold = False And Application.OperatingSystem Like "*Mac*" Then
+ActiveWorkbook.SaveAs Balances & "/" & Filename & " Outstanding Balances " & Replace(a, "/", "") & ".xlsx"
+
+ElseIf hold = True And Application.OperatingSystem Like "*Mac*" Then
+
+ActiveWorkbook.SaveAs Balances & "/" & Filename & " Holds " & Replace(a, "/", "") & ".xlsx"
+
+ElseIf hold = True Then
+
+ActiveWorkbook.SaveAs Holds & "\" & Filename & " Holds " & Replace(a, "/", "") & ".xlsx"
+
+ElseIf hold = False Then
+ActiveWorkbook.SaveAs Balances & "\" & Filename & " Outstanding Balances " & Replace(a, "/", "") & ".xlsx"
+End If
+
+'Closes the newly created workbook so you are still looking at the original workbook
+
+ActiveWorkbook.Close
+
+Else
+Application.DisplayAlerts = False
+Worksheets(2).Delete
+
+End If
+
+    Worksheets(1).Activate
+    If ActiveSheet.FilterMode Then ActiveSheet.ShowAllData
+    
+   
+Next
+    
+End Sub
+
+Public Function fRelocateOneDrivePath(strParamURIPath As String) As String 'this is extremely specific to my system because of where I store stuff
+
+Dim strPath As String
+Dim I As Integer
+
+' Replace all "/" by "\" if exists
+If Application.OperatingSystem Like "*Mac*" Then
+strPath = strParamURIPath
+Else
+strPath = Replace(strParamURIPath, "/", "\")
+End If
+
+If Left(strParamURIPath, 4) = "http" Then
+
+' Remove the OneDrive URI part of the path : ex : "https://mysharepoint.com/personal/Univ of TN OneDrive/Documents/ <- All this needs to be deleted"
+If Application.OperatingSystem Like "*Mac*" Then
+For I = 1 To 6
+strPath = Mid(strPath, InStr(strPath, "/") + 1)
+Next
+fRelocateOneDrivePath = Environ("OneDrive") & "/" & strPath
+Else
+For I = 1 To 6
+strPath = Mid(strPath, InStr(strPath, "\") + 1)
+
+Next
+fRelocateOneDrivePath = Environ("OneDrive") & "\" & strPath
+End If
+
+Else
+' Do Nothing
+fRelocateOneDrivePath = strParamURIPath
+End If
+
+End Function
+
+
+
+
+'EASD = Aerospace = ADMBA
+'EGSC = Global Supply Chain MBA = EMBA GSC
+'EHEM = Healthcare Executive MBA = EMBA HL
+'EMSL = Exec MBA-Senior Leaders = EMBA SL current calendar year based on report run date^
+
+'EP22, EP23, EPBA, EMBA = Professional MBA 2022 = PROMBA
+   'EP23 = Professional MBA 2023 = PROMBA
+   'EPBA = Prof EMBA 2018 = PROMBA
+   'EMBA = Exemption-Executive MBA 2017 = PROMBA     last year and current sem
+
+'EPHY = Physician Executive MBA = PEMBA
+
+
+'\Alex Holmes\OneDrive - University of Tennessee\Desktop\INMT 442\ClientAssignment1\test"
