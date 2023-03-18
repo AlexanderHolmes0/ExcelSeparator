@@ -221,9 +221,6 @@ End If
 
 End Function
 
-
-
-
 'EASD = Aerospace = ADMBA
 'EGSC = Global Supply Chain MBA = EMBA GSC
 'EHEM = Healthcare Executive MBA = EMBA HL
@@ -235,6 +232,3 @@ End Function
    'EMBA = Exemption-Executive MBA 2017 = PROMBA     last year and current sem
 
 'EPHY = Physician Executive MBA = PEMBA
-
-
-'\Alex Holmes\OneDrive - University of Tennessee\Desktop\INMT 442\ClientAssignment1\test"
